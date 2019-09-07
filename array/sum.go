@@ -17,3 +17,16 @@ func SumAll(listNum ...[]int) (sums []int) {
 
 	return
 }
+
+func SumAllTails(listNum ...[]int) (sums []int) {
+
+	for _, list := range listNum {
+		if len(list) == 0 {
+			sums = append(sums, 0)
+		} else {
+			sums = append(sums, Sum(list[1:]))
+		}
+	}
+
+	return
+}
