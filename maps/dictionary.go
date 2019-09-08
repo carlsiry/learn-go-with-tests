@@ -14,3 +14,7 @@ func (d Dictionary) Search(key string) (string, error) {
 
 	return def, nil
 }
+
+func (d Dictionary) Add(key, definition string) {
+	d[key] = definition
+}
