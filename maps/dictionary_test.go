@@ -1,6 +1,8 @@
 package maps
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestSearch(t *testing.T) {
 
@@ -48,6 +50,30 @@ func TestAdd(t *testing.T) {
 	})
 }
 
+func TestUpdate(t *testing.T) {
+	t.Run("existing word", func(t *testing.T) {
+		word := "test"
+		definition := "this is just a test"
+		dictionary := Dictionary{word: definition}
+
+		newDefinition := "new definition"
+		err := dictionary.Update(word, newDefinition)
+
+		assertError(t, err, nil)
+		assertDefinition(t, dictionary, word, newDefinition)
+	})
+
+	t.Run("new word", func(t *testing.T) {
+		word := "test"
+		definition := "this is just a test"
+		dictionary := Dictionary{}
+
+		err := dictionary.Update(word, definition)
+
+		assertError(t, err, ErrWordDoesNotExists)
+	})
+}
+
 func assertStrings(t *testing.T, got, want string) {
 	if got != want {
 		t.Errorf("got '%s' want '%s'", got, want)
@@ -69,6 +95,6 @@ func assertDefinition(t *testing.T, dict Dictionary, key, val string) {
 		t.Fatal("should find added world, but", err)
 	}
 	if got != val {
-		t.Errorf("got %s want %s", got, val)
+		t.Errorf("got '%s' want '%s'", got, val)
 	}
 }
