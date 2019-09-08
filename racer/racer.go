@@ -1,15 +1,27 @@
 package racer
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 )
 
-func Racer(a, b string) (winner string) {
+const timeout = 3 * time.Second
+
+var TimeoutError = fmt.Errorf("http request timeout within %d millsecond", timeout)
+
+func Racer(a, b string) (string, error) {
+	return ConfigurableRacer(a, b, timeout)
+}
+
+func ConfigurableRacer(a, b string, timeout time.Duration) (winner string, err error) {
 	select {
 	case <-ping(a):
-		return a
+		return a, nil
 	case <-ping(b):
-		return b
+		return b, nil
+	case <-time.After(timeout):
+		return "", TimeoutError
 	}
 }
 
