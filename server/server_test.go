@@ -9,7 +9,7 @@ import (
 func TestPlayerServer(t *testing.T) {
 
 	t.Run("returns Pepper's score", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/players/Pepper", nil)
+		request := newGetStoreRequest("Pepper")
 		response := httptest.NewRecorder()
 
 		PlayerServer(response, request)
@@ -17,13 +17,11 @@ func TestPlayerServer(t *testing.T) {
 		got := response.Body.String()
 		want := "10"
 
-		if got != want {
-			t.Errorf("got '%s' want '%s'", got, want)
-		}
+		assertResponseBody(t, got, want)
 	})
 
 	t.Run("return Floyd's score", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/players/Floyd", nil)
+		request := newGetStoreRequest("Floyd")
 		response := httptest.NewRecorder()
 
 		PlayerServer(response, request)
@@ -31,8 +29,18 @@ func TestPlayerServer(t *testing.T) {
 		got := response.Body.String()
 		want := "20"
 
-		if got != want {
-			t.Errorf("got '%s' want '%s'", got, want)
-		}
+		assertResponseBody(t, got, want)
 	})
+}
+
+func newGetStoreRequest(name string) *http.Request {
+	request, _ := http.NewRequest(http.MethodGet, "/players/"+name, nil)
+	return request
+}
+
+func assertResponseBody(t *testing.T, got, want string) {
+	t.Helper()
+	if got != want {
+		t.Errorf("got '%s' want '%s'", got, want)
+	}
 }
