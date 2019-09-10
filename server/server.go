@@ -7,20 +7,33 @@ import (
 
 const prefixLen = len("/players/")
 
-// PlayerServer .
-func PlayerServer(w http.ResponseWriter, r *http.Request) {
+// PlayerStore .
+type PlayerStore interface {
+	GetPlayerScore(name string) string
+}
 
-	player := r.URL.Path[prefixLen:]
-	_, _ = fmt.Fprint(w, GetPlayerScore(player))
+// PlayerServer .
+type PlayerServer struct {
+	Store PlayerStore
+}
+
+// StubPlayerStore 存储玩家分数
+type StubPlayerStore struct {
+	scores map[string]string
 }
 
 // GetPlayerScore .
-func GetPlayerScore(p string) string {
-	if p == "Pepper" {
-		return "10"
+func (s *StubPlayerStore) GetPlayerScore(name string) string {
+	return s.scores[name]
+}
+
+func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	player := r.URL.Path[prefixLen:]
+	score := p.Store.GetPlayerScore(player)
+
+	if score == "" {
+		w.WriteHeader(http.StatusNotFound)
 	}
-	if p == "Floyd" {
-		return "20"
-	}
-	return ""
+
+	fmt.Fprint(w, p.Store.GetPlayerScore(player))
 }
