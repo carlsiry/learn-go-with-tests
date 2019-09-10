@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,6 +13,7 @@ func TestPlayerServer(t *testing.T) {
 			"Pepper": "10",
 			"Floyd":  "20",
 		},
+		nil,
 	}
 	server := &PlayerServer{&store}
 
@@ -66,9 +68,41 @@ func assertResponseBody(t *testing.T, got, want string) {
 	}
 }
 
-func assertStatus(t *testing.T, got, want int)  {
+func assertStatus(t *testing.T, got, want int) {
 	t.Helper()
 	if got != want {
 		t.Errorf("got %d want %d", got, want)
 	}
+}
+
+func TestStoreWins(t *testing.T) {
+	player := "Pepper"
+	store := StubPlayerStore{
+		map[string]string{},
+		nil,
+	}
+	server := &PlayerServer{Store: &store}
+
+	t.Run("it records wins when POST", func(t *testing.T) {
+		request := newPostWinRequest(player)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusAccepted)
+
+		if len(store.winCalls) != 1 {
+			t.Errorf("got %d calls to RecordWin want %d", len(store.winCalls), 1)
+		}
+
+		gotWinner := store.winCalls[0]
+		if gotWinner != player {
+			t.Errorf("didnot store correct winner got '%s' want '%s'", gotWinner, player)
+		}
+	})
+}
+
+func newPostWinRequest(name string) *http.Request {
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/players/%s", name), nil)
+	return req
 }
