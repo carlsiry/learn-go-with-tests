@@ -10,7 +10,7 @@ import (
 func main() {
 
 	ps := &server.PlayerServer{
-		Store: &server.InMemoryPlayerStore{},
+		Store: server.NewInMemoryPlayerStore(),
 	}
 
 	if err := http.ListenAndServe(":5000", ps); err != nil {

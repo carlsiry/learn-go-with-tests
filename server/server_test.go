@@ -9,9 +9,9 @@ import (
 
 func TestPlayerServer(t *testing.T) {
 	store := StubPlayerStore{
-		map[string]string{
-			"Pepper": "10",
-			"Floyd":  "20",
+		map[string]int{
+			"Pepper": 10,
+			"Floyd":  20,
 		},
 		nil,
 	}
@@ -78,7 +78,7 @@ func assertStatus(t *testing.T, got, want int) {
 func TestStoreWins(t *testing.T) {
 	player := "Pepper"
 	store := StubPlayerStore{
-		map[string]string{},
+		map[string]int{},
 		nil,
 	}
 	server := &PlayerServer{Store: &store}
@@ -105,4 +105,20 @@ func TestStoreWins(t *testing.T) {
 func newPostWinRequest(name string) *http.Request {
 	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/players/%s", name), nil)
 	return req
+}
+
+func TestRecordingWinsAndRetrievingThem(t *testing.T) {
+	store := NewInMemoryPlayerStore()
+	server := PlayerServer{store}
+	player := "Pepper"
+
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+
+	response := httptest.NewRecorder()
+	server.ServeHTTP(response, newGetStoreRequest(player))
+
+	assertStatus(t, response.Code, http.StatusOK)
+	assertResponseBody(t, response.Body.String(), "3")
 }
