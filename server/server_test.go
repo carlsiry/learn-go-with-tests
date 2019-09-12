@@ -184,7 +184,7 @@ func getLeagueFromResponse(t *testing.T, body io.Reader) []Player {
 	return league
 }
 
-func assertLeague(t *testing.T, got, want []Player) {
+func assertLeague(t *testing.T, got, want League) {
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v want %v", got, want)
 	}
@@ -198,6 +198,23 @@ func assertContentType(t *testing.T, response *httptest.ResponseRecorder, want s
 }
 
 func TestFileSystemStore(t *testing.T) {
+	t.Run("/league sorted", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, `[
+			{"Name": "Cleo", "Wins": 10},
+			{"Name": "Chris", "Wins": 33}
+		]`)
+		defer cleanDatabase()
+
+		store, err := NewFileSystemPlayerStore(database)
+		assertError(t, err, nil)
+
+		got := store.GetLeague()
+		want := League{
+			{Name: "Chris", Wins: 33},
+			{Name: "Cleo", Wins: 10},
+		}
+		assertLeague(t, got, want)
+	})
 
 	t.Run("/league from a reader", func(t *testing.T) {
 		database, cleanDatabase := createTempFile(t, `[
@@ -270,6 +287,7 @@ func TestFileSystemStore(t *testing.T) {
 		want := 1
 		assertScoreEquals(t, got, want)
 	})
+
 	t.Run("works with an empty file", func(t *testing.T) {
 		database, cleanDatabase := createTempFile(t, "")
 		defer cleanDatabase()

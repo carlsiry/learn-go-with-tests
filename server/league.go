@@ -6,6 +6,11 @@ import (
 	"io"
 )
 
+type Player struct {
+	Name string
+	Wins int
+}
+
 type League []Player
 
 func (l League) Find(name string) *Player {
