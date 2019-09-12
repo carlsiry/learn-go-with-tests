@@ -109,10 +109,19 @@ func newPostWinRequest(name string) *http.Request {
 	return req
 }
 
+func assertError(t *testing.T, got, want error) {
+	t.Helper()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %s want %s", got, want)
+	}
+}
+
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	database, cleanDatabase := createTempFile(t, "")
+	database, cleanDatabase := createTempFile(t, "[]")
 	defer cleanDatabase()
-	store := NewFileSystemPlayerStore(database)
+	store, err := NewFileSystemPlayerStore(database)
+	assertError(t, err, nil)
+
 	server := NewPlayerServer(store)
 	player := "Pepper"
 
@@ -197,7 +206,8 @@ func TestFileSystemStore(t *testing.T) {
 		]`)
 		defer cleanDatabase()
 
-		store := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(database)
+		assertError(t, err, nil)
 
 		got := store.GetLeague()
 		want := []Player{
@@ -218,7 +228,8 @@ func TestFileSystemStore(t *testing.T) {
 		]`)
 		defer cleanDatabase()
 
-		store := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(database)
+		assertError(t, err, nil)
 
 		got := store.GetPlayerScore("Chris")
 		want := 33
@@ -233,7 +244,8 @@ func TestFileSystemStore(t *testing.T) {
 		]`)
 		defer cleanDatabase()
 
-		store := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(database)
+		assertError(t, err, nil)
 
 		store.RecordWin("Chris")
 
@@ -249,13 +261,22 @@ func TestFileSystemStore(t *testing.T) {
 		]`)
 		defer cleanDatabase()
 
-		store := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(database)
+		assertError(t, err, nil)
 
 		store.RecordWin("Pepper")
 
 		got := store.GetPlayerScore("Pepper")
 		want := 1
 		assertScoreEquals(t, got, want)
+	})
+	t.Run("works with an empty file", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, "")
+		defer cleanDatabase()
+
+		_, err := NewFileSystemPlayerStore(database)
+
+		assertError(t, err, nil)
 	})
 }
 
