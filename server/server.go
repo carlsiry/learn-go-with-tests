@@ -1,22 +1,30 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
 const prefixLen = len("/players/")
 
+type Player struct {
+	Name string
+	Wins int
+}
+
 // PlayerStore 玩家数据存储器
 type PlayerStore interface {
 	GetPlayerScore(name string) int
 	RecordWin(name string)
+	GetLeague() []Player
 }
 
 // StubPlayerStore 玩家分数存储器
 type StubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
+	league   []Player
 }
 
 // GetPlayerScore 获取玩家分数方法
@@ -28,6 +36,10 @@ func (s *StubPlayerStore) RecordWin(name string) {
 	s.winCalls = append(s.winCalls, name)
 }
 
+func (s *StubPlayerStore) GetLeague() []Player {
+	return s.league
+}
+
 // InMemoryPlayerStore 内存实现版
 type InMemoryPlayerStore struct {
 	store map[string]int
@@ -37,9 +49,18 @@ type InMemoryPlayerStore struct {
 func (s *InMemoryPlayerStore) GetPlayerScore(name string) int {
 	return s.store[name]
 }
-
 func (s *InMemoryPlayerStore) RecordWin(name string) {
 	s.store[name]++
+}
+func (s *InMemoryPlayerStore) GetLeague() []Player {
+	var league []Player
+	for name, wins := range s.store {
+		league = append(league, Player{
+			Name: name,
+			Wins: wins,
+		})
+	}
+	return league
 }
 
 func NewInMemoryPlayerStore() *InMemoryPlayerStore {
@@ -49,19 +70,27 @@ func NewInMemoryPlayerStore() *InMemoryPlayerStore {
 // PlayerServer 玩家服务
 type PlayerServer struct {
 	Store PlayerStore
+	http.Handler
 }
 
-func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func NewPlayerServer(store PlayerStore) *PlayerServer {
+	server := new(PlayerServer)
+	server.Store = store
 
 	router := http.NewServeMux()
+	router.Handle("/players/", http.HandlerFunc(server.playersHandle))
+	router.Handle("/league", http.HandlerFunc(server.leagueHandle))
 
-	router.Handle("/players/", http.HandlerFunc(p.playersHandle))
-	router.Handle("/league", http.HandlerFunc(p.leagueHandle))
+	server.Handler = router
 
-	router.ServeHTTP(w, r)
+	return server
 }
 
 func (p *PlayerServer) leagueHandle(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
+	// todo: handle error
+	_ = json.NewEncoder(w).Encode(p.Store.GetLeague())
+
 	w.WriteHeader(http.StatusOK)
 }
 
