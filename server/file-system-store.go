@@ -76,3 +76,17 @@ func initialisePlayerDBFile(file *os.File) error {
 
 	return nil
 }
+
+func FileSystemPlayerStoreFromFile(path string) (*FileSystemPlayerStore, error) {
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return nil, fmt.Errorf("problem opening %s %v", path, err)
+	}
+
+	store, err := NewFileSystemPlayerStore(file)
+	if err != nil {
+		return nil, fmt.Errorf("problem creating file system player store, %v", err)
+	}
+
+	return store, nil
+}
