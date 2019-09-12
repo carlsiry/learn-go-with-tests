@@ -17,14 +17,14 @@ type Player struct {
 type PlayerStore interface {
 	GetPlayerScore(name string) int
 	RecordWin(name string)
-	GetLeague() []Player
+	GetLeague() League
 }
 
 // StubPlayerStore 玩家分数存储器
 type StubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
-	league   []Player
+	league   League
 }
 
 // GetPlayerScore 获取玩家分数方法
@@ -36,35 +36,8 @@ func (s *StubPlayerStore) RecordWin(name string) {
 	s.winCalls = append(s.winCalls, name)
 }
 
-func (s *StubPlayerStore) GetLeague() []Player {
+func (s *StubPlayerStore) GetLeague() League {
 	return s.league
-}
-
-// InMemoryPlayerStore 内存实现版
-type InMemoryPlayerStore struct {
-	store map[string]int
-}
-
-// GetPlayerScore 获取玩家的分数
-func (s *InMemoryPlayerStore) GetPlayerScore(name string) int {
-	return s.store[name]
-}
-func (s *InMemoryPlayerStore) RecordWin(name string) {
-	s.store[name]++
-}
-func (s *InMemoryPlayerStore) GetLeague() []Player {
-	var league []Player
-	for name, wins := range s.store {
-		league = append(league, Player{
-			Name: name,
-			Wins: wins,
-		})
-	}
-	return league
-}
-
-func NewInMemoryPlayerStore() *InMemoryPlayerStore {
-	return &InMemoryPlayerStore{store: map[string]int{}}
 }
 
 // PlayerServer 玩家服务
