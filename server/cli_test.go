@@ -30,42 +30,29 @@ func TestCLI(t *testing.T) {
 		in := strings.NewReader("Cleo wins\n")
 		playerStore := &StubPlayerStore{}
 
-		cli := NewCLI(playerStore, in, dummyStdOut, nil)
-		cli.PlayPoker()
-
-		assertPlayerWin(t, playerStore, "Chris")
-	})
-
-	t.Run("record cleo win from user input", func(t *testing.T) {
-		in := strings.NewReader("Cleo wins\n")
-		playerStore := &StubPlayerStore{}
-
-		cli := NewCLI(playerStore, in, dummyStdOut, nil)
+		cli := NewCLI(playerStore, in, dummyStdOut, dummyBlindAlerter)
 		cli.PlayPoker()
 
 		assertPlayerWin(t, playerStore, "Cleo")
 	})
 
 	t.Run("it schedules printing of blind values", func(t *testing.T) {
-		in := strings.NewReader("Chris wins\n")
-		playerStore := &StubPlayerStore{}
 		blindAlerter := &SpyBlindAlerter{}
-
-		cli := NewCLI(playerStore, in, dummyStdOut, nil)
+		cli := NewCLI(dummyPlayerStore, dummyStdIn, dummyStdOut, blindAlerter)
 		cli.PlayPoker()
 
 		cases := []scheduledAlert{
-			{0 * time.Second, 100},
-			{10 * time.Minute, 200},
-			{20 * time.Minute, 300},
-			{30 * time.Minute, 400},
-			{40 * time.Minute, 500},
-			{50 * time.Minute, 600},
-			{60 * time.Minute, 800},
-			{70 * time.Minute, 1000},
-			{80 * time.Minute, 2000},
-			{90 * time.Minute, 4000},
-			{100 * time.Minute, 8000},
+			{at: 0 * time.Second, amount: 100},
+			{at: 10 * time.Second, amount: 200},
+			{at: 20 * time.Second, amount: 300},
+			{at: 30 * time.Second, amount: 400},
+			{at: 40 * time.Second, amount: 500},
+			{at: 50 * time.Second, amount: 600},
+			{at: 60 * time.Second, amount: 800},
+			{at: 70 * time.Second, amount: 1000},
+			{at: 80 * time.Second, amount: 2000},
+			{at: 90 * time.Second, amount: 4000},
+			{at: 100 * time.Second, amount: 8000},
 		}
 
 		for i, want := range cases {
@@ -79,13 +66,14 @@ func TestCLI(t *testing.T) {
 			})
 		}
 	})
+
 	t.Run("it prompts the user to enter the number of players", func(t *testing.T) {
 		stdout := &bytes.Buffer{}
 		cli := NewCLI(dummyPlayerStore, dummyStdIn, stdout, dummyBlindAlerter)
 		cli.PlayPoker()
 
 		got := stdout.String()
-		want := "please enter the number of players: "
+		want := PlayerPrompt
 
 		if got != want {
 			t.Errorf("got %q, want %q", got, want)
