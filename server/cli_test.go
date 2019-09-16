@@ -45,6 +45,18 @@ func TestCLI(t *testing.T) {
 			t.Errorf("wanted start called with 7 but got %d", game.StartedWith)
 		}
 	})
+
+	t.Run("it prints an error whenn a non numeric value is entered and does not start the game", func(t *testing.T) {
+		stdout := &bytes.Buffer{}
+		in := strings.NewReader("Pies\n")
+		game := &GameSpy{}
+
+		cli := NewCLI(in, stdout, game)
+		cli.PlayPoker()
+
+		assertMessageSentToUser(t, stdout, PlayerPrompt, BadPlayerInputErrMsg)
+		assertGameNotStarted(t, game)
+	})
 }
 
 func assertScheduledAlert(t *testing.T, got, want scheduledAlert) {
@@ -71,5 +83,22 @@ func assertPlayerWin(t *testing.T, store *StubPlayerStore, winner string) {
 
 	if store.winCalls[0] != winner {
 		t.Errorf("didn't correct winner, got '%s', want '%s'", store.winCalls[0], winner)
+	}
+}
+
+func assertMessageSentToUser(t *testing.T, stdout *bytes.Buffer, messages ...string) {
+	t.Helper()
+	want := strings.Join(messages, "")
+	got := stdout.String()
+
+	if got != want {
+		t.Errorf("got %q sent to stdout but expected %+v", got, messages)
+	}
+}
+
+func assertGameNotStarted(t testing.T, game *GameSpy) {
+	t.Helper()
+	if game.StartedWith != 0 {
+		t.Errorf("game should not have started")
 	}
 }
