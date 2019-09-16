@@ -2,10 +2,8 @@ package server
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 	"testing"
-	"time"
 )
 
 var (
@@ -27,39 +25,6 @@ func TestCLI(t *testing.T) {
 		assertPlayerWin(t, playerStore, "Chris")
 	})
 
-	t.Run("it schedules printing of blind values", func(t *testing.T) {
-		blindAlerter := &SpyBlindAlerter{}
-		game := NewGame(blindAlerter, dummyPlayerStore)
-
-		cli := NewCLI(dummyStdIn, dummyStdOut, game)
-		cli.PlayPoker()
-
-		cases := []scheduledAlert{
-			{at: 0 * time.Second, amount: 100},
-			{at: 10 * time.Second, amount: 200},
-			{at: 20 * time.Second, amount: 300},
-			{at: 30 * time.Second, amount: 400},
-			{at: 40 * time.Second, amount: 500},
-			{at: 50 * time.Second, amount: 600},
-			{at: 60 * time.Second, amount: 800},
-			{at: 70 * time.Second, amount: 1000},
-			{at: 80 * time.Second, amount: 2000},
-			{at: 90 * time.Second, amount: 4000},
-			{at: 100 * time.Second, amount: 8000},
-		}
-
-		for i, want := range cases {
-			t.Run(fmt.Sprint(want), func(t *testing.T) {
-				if len(blindAlerter.alerts) <= i {
-					t.Fatalf("alert %d was not scheduled %v", i, blindAlerter.alerts)
-				}
-
-				got := blindAlerter.alerts[i]
-				assertScheduledAlert(t, got, want)
-			})
-		}
-	})
-
 	t.Run("it prompts the user to enter the number of players", func(t *testing.T) {
 		stdout := &bytes.Buffer{}
 		in := strings.NewReader("7\n")
@@ -74,24 +39,6 @@ func TestCLI(t *testing.T) {
 
 		if got != want {
 			t.Errorf("got %q, want %q", got, want)
-		}
-
-		cases := []scheduledAlert{
-			{0 * time.Second, 100},
-			{12 * time.Second, 200},
-			{24 * time.Second, 300},
-			{36 * time.Second, 400},
-		}
-
-		for i, want := range cases {
-			t.Run(fmt.Sprint(want), func(t *testing.T) {
-				if len(blindAlerter.alerts) <= i {
-					t.Fatalf("alert %d was not scheduled %v", i, blindAlerter.alerts)
-				}
-
-				got := blindAlerter.alerts[i]
-				assertScheduledAlert(t, got, want)
-			})
 		}
 	})
 }

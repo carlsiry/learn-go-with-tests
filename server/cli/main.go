@@ -18,6 +18,8 @@ func main() {
 		log.Fatalf("problem createing file system player store, %v", err)
 	}
 
-	game := server.NewCLI(store, os.Stdin, server.BlindAlerterFunc(server.StdOutAlerter))
-	game.PlayPoker()
+	game := server.NewGame(server.BlindAlerterFunc(server.StdOutAlerter), store)
+
+	cli := server.NewCLI(os.Stdin, os.Stdout, game)
+	cli.PlayPoker()
 }

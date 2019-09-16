@@ -2,12 +2,17 @@ package server
 
 import "time"
 
-type Game struct {
+type Game interface {
+	Start(numberOfPlayers int)
+	Finish(winner string)
+}
+
+type PokerGame struct {
 	alerter BlindAlerter
 	store   PlayerStore
 }
 
-func (p *Game) Start(numberOfPlayers int) {
+func (p *PokerGame) Start(numberOfPlayers int) {
 	blindIncrement := time.Duration(5+numberOfPlayers) * time.Second
 
 	blinds := []int{100, 200, 300, 400, 500, 600, 800, 1000, 2000, 4000, 8000}
@@ -18,13 +23,13 @@ func (p *Game) Start(numberOfPlayers int) {
 	}
 }
 
-func (p *Game) Finish(winner string) {
+func (p *PokerGame) Finish(winner string) {
 	p.store.RecordWin(winner)
 }
 
-func NewGame(alerter BlindAlerter, store PlayerStore) *Game {
+func NewGame(alerter BlindAlerter, store PlayerStore) *PokerGame {
 
-	return &Game{
+	return &PokerGame{
 		alerter: alerter,
 		store:   store,
 	}
