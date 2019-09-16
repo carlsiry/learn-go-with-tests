@@ -14,6 +14,7 @@ var (
 )
 
 func TestCLI(t *testing.T) {
+
 	t.Run("record chris win from user input", func(t *testing.T) {
 		in := strings.NewReader("5\nChris wins\n")
 		playerStore := &StubPlayerStore{}
@@ -28,9 +29,8 @@ func TestCLI(t *testing.T) {
 	t.Run("it prompts the user to enter the number of players", func(t *testing.T) {
 		stdout := &bytes.Buffer{}
 		in := strings.NewReader("7\n")
-		blindAlerter := &SpyBlindAlerter{}
+		game := &GameSpy{}
 
-		game := NewGame(blindAlerter, dummyPlayerStore)
 		cli := NewCLI(in, stdout, game)
 		cli.PlayPoker()
 
@@ -39,6 +39,10 @@ func TestCLI(t *testing.T) {
 
 		if got != want {
 			t.Errorf("got %q, want %q", got, want)
+		}
+
+		if game.StartedWith != 7 {
+			t.Errorf("wanted start called with 7 but got %d", game.StartedWith)
 		}
 	})
 }
