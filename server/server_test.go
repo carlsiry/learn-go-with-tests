@@ -185,6 +185,7 @@ func getLeagueFromResponse(t *testing.T, body io.Reader) []Player {
 }
 
 func assertLeague(t *testing.T, got, want League) {
+	t.Helper()
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v want %v", got, want)
 	}
@@ -228,8 +229,8 @@ func TestFileSystemStore(t *testing.T) {
 
 		got := store.GetLeague()
 		want := []Player{
-			{"Cleo", 10},
 			{"Chris", 33},
+			{"Cleo", 10},
 		}
 
 		assertLeague(t, got, want)
