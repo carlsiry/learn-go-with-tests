@@ -96,7 +96,7 @@ func assertMessageSentToUser(t *testing.T, stdout *bytes.Buffer, messages ...str
 	}
 }
 
-func assertGameNotStarted(t testing.T, game *GameSpy) {
+func assertGameNotStarted(t *testing.T, game *GameSpy) {
 	t.Helper()
 	if game.StartedWith != 0 {
 		t.Errorf("game should not have started")

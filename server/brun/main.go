@@ -12,10 +12,13 @@ func main() {
 
 	store, err := server.FileSystemPlayerStoreFromFile(dbFileName)
 	if err != nil {
-		log.Fatalf("didnt expect an error but got one, %v", dbFileName, err)
+		log.Fatalf("didnt expect an error but got one, %v", err)
 	}
 
-	ps := server.NewPlayerServer(store)
+	ps, err := server.NewPlayerServer(store, "./server/game.html")
+	if err != nil {
+		log.Fatalf("didnt expect an error but got one, %v", err)
+	}
 
 	if err := http.ListenAndServe(":5000", ps); err != nil {
 		log.Fatalf("could not listen on port 5000 %v", err)
