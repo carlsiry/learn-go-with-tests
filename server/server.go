@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 	"html/template"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -15,6 +16,26 @@ const prefixLen = len("/players/")
 var wsUpgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+}
+
+type playerServerWS struct {
+	*websocket.Conn
+}
+
+func newPlayerServerWS(w http.ResponseWriter, r *http.Request) *playerServerWS {
+	conn, err := wsUpgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("proble upgrading connection to websockets %v\n", err)
+	}
+	return &playerServerWS{conn}
+}
+
+func (w *playerServerWS) WaitForMsg() string {
+	_, msg, err := w.ReadMessage()
+	if err != nil {
+		log.Printf("error reading from websocket %v\n", err)
+	}
+	return string(msg)
 }
 
 // PlayerServer 玩家服务
@@ -63,13 +84,13 @@ func (p *PlayerServer) games(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
-	conn, _ := wsUpgrader.Upgrade(w, r, nil)
+	ws := newPlayerServerWS(w, r)
 
-	_, numberOfPlayersMsg, _ := conn.ReadMessage()
+	numberOfPlayersMsg := ws.WaitForMsg()
 	numberOfPlayers, _ := strconv.Atoi(string(numberOfPlayersMsg))
 	p.game.Start(numberOfPlayers, ioutil.Discard)
 
-	_, winnerMsg, _ := conn.ReadMessage()
+	winnerMsg := ws.WaitForMsg()
 	p.game.Finish(string(winnerMsg))
 }
 

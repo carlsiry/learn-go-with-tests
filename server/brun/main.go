@@ -15,7 +15,9 @@ func main() {
 		log.Fatalf("didnt expect an error but got one, %v", err)
 	}
 
-	ps, err := server.NewPlayerServer(store, "./server/game.html")
+	game := server.NewGame(server.BlindAlerterFunc(server.Alerter), store)
+
+	ps, err := server.NewPlayerServer(store, "./server/game.html", game)
 	if err != nil {
 		log.Fatalf("didnt expect an error but got one, %v", err)
 	}
