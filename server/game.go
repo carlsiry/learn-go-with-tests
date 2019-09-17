@@ -37,16 +37,3 @@ func NewGame(alerter BlindAlerter, store PlayerStore) *PokerGame {
 		store:   store,
 	}
 }
-
-type GameSpy struct {
-	StartedWith  int
-	FinishedWith string
-}
-
-func (g *GameSpy) Start(numberOfPlayers int, alertsDst io.Writer) {
-	g.StartedWith = numberOfPlayers
-}
-
-func (g GameSpy) Finish(winner string) {
-	g.FinishedWith = winner
-}

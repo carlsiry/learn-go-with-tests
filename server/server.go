@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"html/template"
+	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 const prefixLen = len("/players/")
@@ -20,6 +22,7 @@ type PlayerServer struct {
 	Store PlayerStore
 	http.Handler
 	template *template.Template
+	game     Game
 }
 
 func (p *PlayerServer) leagueHandle(w http.ResponseWriter, r *http.Request) {
@@ -55,17 +58,22 @@ func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
 	_, _ = fmt.Fprint(w, p.Store.GetPlayerScore(player))
 }
 
-func (p *PlayerServer) game(w http.ResponseWriter, r *http.Request) {
+func (p *PlayerServer) games(w http.ResponseWriter, r *http.Request) {
 	p.template.Execute(w, nil)
 }
 
 func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
 	conn, _ := wsUpgrader.Upgrade(w, r, nil)
+
+	_, numberOfPlayersMsg, _ := conn.ReadMessage()
+	numberOfPlayers, _ := strconv.Atoi(string(numberOfPlayersMsg))
+	p.game.Start(numberOfPlayers, ioutil.Discard)
+
 	_, winnerMsg, _ := conn.ReadMessage()
-	p.Store.RecordWin(string(winnerMsg))
+	p.game.Finish(string(winnerMsg))
 }
 
-func NewPlayerServer(store PlayerStore, file string) (*PlayerServer, error) {
+func NewPlayerServer(store PlayerStore, file string, game Game) (*PlayerServer, error) {
 	server := new(PlayerServer)
 
 	tmpl, err := template.ParseFiles(file)
@@ -76,10 +84,11 @@ func NewPlayerServer(store PlayerStore, file string) (*PlayerServer, error) {
 	router := http.NewServeMux()
 	router.Handle("/players/", http.HandlerFunc(server.playersHandle))
 	router.Handle("/league", http.HandlerFunc(server.leagueHandle))
-	router.Handle("/game", http.HandlerFunc(server.game))
+	router.Handle("/game", http.HandlerFunc(server.games))
 	router.Handle("/ws", http.HandlerFunc(server.webSocket))
 
 	server.Store = store
+	server.game = game
 	server.template = tmpl
 	server.Handler = router
 

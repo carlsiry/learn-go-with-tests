@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"io"
 	"strings"
 	"testing"
 )
@@ -12,6 +13,19 @@ var (
 	dummyStdIn        = strings.NewReader("5\n")
 	dummyStdOut       = &bytes.Buffer{}
 )
+
+type GameSpy struct {
+	StartedWith  int
+	FinishedWith string
+}
+
+func (g *GameSpy) Start(numberOfPlayers int, alertsDst io.Writer) {
+	g.StartedWith = numberOfPlayers
+}
+
+func (g *GameSpy) Finish(winner string) {
+	g.FinishedWith = winner
+}
 
 func TestCLI(t *testing.T) {
 
@@ -101,4 +115,23 @@ func assertGameNotStarted(t *testing.T, game *GameSpy) {
 	if game.StartedWith != 0 {
 		t.Errorf("game should not have started")
 	}
+}
+
+func assertFinishCalledWith(t *testing.T, game *GameSpy, winner string) {
+	t.Helper()
+
+	if game.FinishedWith != winner {
+		t.Errorf("got %s want %s", game.FinishedWith, winner)
+	}
+}
+
+func assertGameStartedWith(t *testing.T, game *GameSpy, numberOfPlayersWanted int) {
+	t.Helper()
+	if game.StartedWith != numberOfPlayersWanted {
+		t.Errorf("wanted Start called with %d but got %d", numberOfPlayersWanted, game.StartedWith)
+	}
+}
+
+func userSends(messages ...string) io.Reader {
+	return strings.NewReader(strings.Join(messages, "\n"))
 }
