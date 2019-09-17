@@ -94,10 +94,10 @@ func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
 
 	numberOfPlayersMsg := ws.WaitForMsg()
 	numberOfPlayers, _ := strconv.Atoi(string(numberOfPlayersMsg))
-	p.game.Start(numberOfPlayers, w)
+	p.game.Start(numberOfPlayers, ws)
 
-	winnerMsg := ws.WaitForMsg()
-	p.game.Finish(string(winnerMsg))
+	winner := ws.WaitForMsg()
+	p.game.Finish(winner)
 }
 
 func NewPlayerServer(store PlayerStore, file string, game Game) (*PlayerServer, error) {

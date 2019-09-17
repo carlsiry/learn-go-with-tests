@@ -15,12 +15,18 @@ var (
 )
 
 type GameSpy struct {
-	StartedWith  int
+	StartedWith int
+	StartedCall bool
+	BlindAlert  []byte
+
+	FinishedCall bool
 	FinishedWith string
 }
 
 func (g *GameSpy) Start(numberOfPlayers int, alertsDst io.Writer) {
+	g.StartedCall = true
 	g.StartedWith = numberOfPlayers
+	alertsDst.Write(g.BlindAlert)
 }
 
 func (g *GameSpy) Finish(winner string) {
