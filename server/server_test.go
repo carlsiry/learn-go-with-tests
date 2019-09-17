@@ -370,9 +370,8 @@ func TestGame(t *testing.T) {
 		writeWSMessage(t, ws, "3")
 		writeWSMessage(t, ws, winner)
 
-		time.Sleep(10 * time.Millisecond)
-		assertGameStartedWith(t, game, 3)
 		assertFinishCalledWith(t, game, winner)
+		assertGameStartedWith(t, game, 3)
 
 		within(t, 10*time.Millisecond, func() {
 			assertWebsocketGotMsg(t, ws, wantedBlindAlert)

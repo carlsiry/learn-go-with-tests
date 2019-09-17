@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"time"
 )
 
 var (
@@ -126,7 +127,10 @@ func assertGameNotStarted(t *testing.T, game *GameSpy) {
 func assertFinishCalledWith(t *testing.T, game *GameSpy, winner string) {
 	t.Helper()
 
-	if game.FinishedWith != winner {
+	passed := retryUntil(500*time.Millisecond, func() bool {
+		return game.FinishedWith == winner
+	})
+	if !passed {
 		t.Errorf("got %s want %s", game.FinishedWith, winner)
 	}
 }
@@ -140,4 +144,14 @@ func assertGameStartedWith(t *testing.T, game *GameSpy, numberOfPlayersWanted in
 
 func userSends(messages ...string) io.Reader {
 	return strings.NewReader(strings.Join(messages, "\n"))
+}
+
+func retryUntil(d time.Duration, f func() bool) bool {
+	deadline := time.Now().Add(d)
+	for time.Now().Before(deadline) {
+		if f() {
+			return true
+		}
+	}
+	return false
 }
