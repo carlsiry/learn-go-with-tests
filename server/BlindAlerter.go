@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"os"
+	"io"
 	"time"
 )
 
@@ -16,19 +16,19 @@ func (s scheduledAlert) String() string {
 }
 
 type BlindAlerter interface {
-	ScheduleAlertAt(duration time.Duration, amount int)
+	ScheduleAlertAt(duration time.Duration, amount int, to io.Writer)
 }
 
-type BlindAlerterFunc func(duration time.Duration, amount int)
+type BlindAlerterFunc func(duration time.Duration, amount int, to io.Writer)
 
-func (a BlindAlerterFunc) ScheduleAlertAt(duration time.Duration, amount int) {
-	a(duration, amount)
+func (a BlindAlerterFunc) ScheduleAlertAt(duration time.Duration, amount int, to io.Writer) {
+	a(duration, amount, to)
 }
 
 // 标准输入实现
-func StdOutAlerter(duration time.Duration, amount int) {
+func Alerter(duration time.Duration, amount int, to io.Writer) {
 	time.AfterFunc(duration, func() {
-		_, _ = fmt.Fprintf(os.Stdout, "Blind is now %d\n", amount)
+		_, _ = fmt.Fprintf(to, "Blind is now %d\n", amount)
 	})
 }
 
@@ -37,6 +37,6 @@ type SpyBlindAlerter struct {
 	alerts []scheduledAlert
 }
 
-func (s *SpyBlindAlerter) ScheduleAlertAt(duration time.Duration, amount int) {
+func (s *SpyBlindAlerter) ScheduleAlertAt(duration time.Duration, amount int, to io.Writer) {
 	s.alerts = append(s.alerts, scheduledAlert{duration, amount})
 }

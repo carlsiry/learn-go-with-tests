@@ -12,7 +12,7 @@ func TestGame_Start(t *testing.T) {
 		blindAlerter := &SpyBlindAlerter{}
 		game := NewGame(blindAlerter, dummyPlayerStore)
 
-		game.Start(5)
+		game.Start(5, nil)
 
 		cases := []scheduledAlert{
 			{at: 0 * time.Second, amount: 100},
@@ -35,7 +35,7 @@ func TestGame_Start(t *testing.T) {
 		blindAlerter := &SpyBlindAlerter{}
 		game := NewGame(blindAlerter, dummyPlayerStore)
 
-		game.Start(7)
+		game.Start(7, nil)
 
 		cases := []scheduledAlert{
 			{0 * time.Second, 100},
