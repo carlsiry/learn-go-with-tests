@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -20,6 +19,13 @@ var wsUpgrader = websocket.Upgrader{
 
 type playerServerWS struct {
 	*websocket.Conn
+}
+
+func (w *playerServerWS) Write(p []byte) (n int, err error) {
+	if err = w.WriteMessage(1, p); err != nil {
+		return 0, err
+	}
+	return len(p), nil
 }
 
 func newPlayerServerWS(w http.ResponseWriter, r *http.Request) *playerServerWS {
@@ -88,7 +94,7 @@ func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
 
 	numberOfPlayersMsg := ws.WaitForMsg()
 	numberOfPlayers, _ := strconv.Atoi(string(numberOfPlayersMsg))
-	p.game.Start(numberOfPlayers, ioutil.Discard)
+	p.game.Start(numberOfPlayers, w)
 
 	winnerMsg := ws.WaitForMsg()
 	p.game.Finish(string(winnerMsg))
